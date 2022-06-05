@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:translationZ="0.1dp"
+    android:background="@color/purple_500">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:id="@+id/tvTodoListTitle"
+        android:textColor="#eeeeee"
+        android:textSize="30dp"
+        android:background="@color/purple_500"
+        android:padding="15dp"/>
+
+
+    <ListView
+        android:id="@+id/todos"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:id="@+id/btnAdd"
+        android:text="할 일 추가"
+        android:visibility="invisible"/>
+</LinearLayout>
