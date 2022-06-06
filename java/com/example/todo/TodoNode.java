@@ -1,5 +1,8 @@
 package com.example.todo;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+
 public class TodoNode {
     public int uid;
     public String name;
@@ -23,5 +26,28 @@ public class TodoNode {
         this.importance = importance;
         this.date = date;
         this.memo = memo;
+    }
+
+    public TodoNode(Cursor c) {
+        this.uid = c.getInt(0);
+        this.name = c.getString(1);
+        this.belong = c.getInt(2);
+        this.checked = c.getInt(3) != 0;
+        this.today = c.getInt(4) != 0;
+        this.importance = c.getInt(5) != 0;
+        this.date = c.getString(6);
+        this.memo = c.getString(7);
+    }
+
+    public ContentValues getContentValues() {
+        ContentValues cv = new ContentValues();
+        cv.put("name", name);
+        cv.put("belong", belong);
+        cv.put("checked", checked);
+        cv.put("today", today);
+        cv.put("importance", importance);
+        cv.put("date", date);
+        cv.put("memo", memo);
+        return cv;
     }
 }

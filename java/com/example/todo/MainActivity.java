@@ -3,12 +3,10 @@ package com.example.todo;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
 import android.widget.GridView;
-import android.widget.ListView;
 
 public class MainActivity extends AppCompatActivity {
-    ListGridAdapter gAdapter;
+    MainTodoListAdapter gAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,7 +16,8 @@ public class MainActivity extends AppCompatActivity {
         DataRepository.initialize(this);
 
         GridView gv = (GridView) findViewById(R.id.gView1);
-        gAdapter = new ListGridAdapter(this);
+
+        gAdapter = new MainTodoListAdapter(this, DataRepository.getTodoLists());
         gv.setAdapter(gAdapter);
     }
 }

@@ -18,8 +18,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ListActivity"/>
-        <activity android:name=".TodoActivity"/>
+        <activity android:name=".TodoListActivity"/>
+        <activity android:name=".TodoNodeActivity"/>
     </application>
 
 </manifest>

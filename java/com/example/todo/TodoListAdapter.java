@@ -1,5 +1,6 @@
 package com.example.todo;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,13 +13,14 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
-
-import java.util.ArrayList;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class TodoListAdapter extends BaseAdapter {
     TodoList todoList;
     Context context;
+
     public TodoListAdapter(Context c, TodoList tl) {
         context = c;
         todoList = tl;
@@ -55,8 +57,7 @@ public class TodoListAdapter extends BaseAdapter {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b != todo.checked) {
                     todo.checked = b;
-                    if (DataRepository.updateTodoNode(todo.belong, todo) == -1)
-                        Toast.makeText(context, "업데이트에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                    DataRepository.updateTodo(todo);
                 }
                 if (b) cb.setPaintFlags(cb.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
                 else cb.setPaintFlags(cb.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
@@ -65,7 +66,28 @@ public class TodoListAdapter extends BaseAdapter {
         cb.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                showMenuDialog(todo);
+                DialogManager menu = new DialogManager(context);
+                menu.showMenuDialog(new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        if (i == 0) {
+                            Intent intent = new Intent(context, TodoNodeActivity.class);
+                            intent.putExtra("uid", todo.uid);
+                            ((AppCompatActivity) context).startActivityForResult(intent, 0);
+                        } else {
+                            DialogManager deleteDialog = new DialogManager(context);
+                            deleteDialog.showDeleteCheckDialog(
+                                    context.getResources().getString(R.string.todo_delete_msg),
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            DataRepository.deleteTodo(todoList, todo);
+                                        }
+                                    });
+                            notifyDataSetChanged();
+                        }
+                    }
+                });
                 return false;
             }
         });
@@ -73,57 +95,5 @@ public class TodoListAdapter extends BaseAdapter {
         cb.setChecked(todo.checked);
         return view;
     }
-
-    private void showMenuDialog(TodoNode todo) {
-        String[] actionItems = new String[]{"수정", "삭제"};
-        AlertDialog.Builder dialog = new AlertDialog.Builder(context);
-        dialog.setTitle("기능 선택");
-
-        dialog.setItems(actionItems, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (i == 0) showUpdateIntent(todo.belong, todo);
-                else {
-                    showDeleteDialog(todo.belong, todo.uid);
-                }
-
-            }
-        });
-        dialog.show();
-    }
-
-    private void showUpdateIntent(int listID, TodoNode todo) {
-        Intent intent = new Intent(context,
-                TodoActivity.class);
-        intent.putExtra("list", todo.belong);
-        intent.putExtra("todo", todo.uid);
-        context.startActivity(intent);
-    }
-    private void showDeleteDialog(int listID, int todoID) {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(context);
-        dialog.setTitle("삭제하시겠습니까?");
-        dialog.setMessage("작업이 영원히 삭제됩니다. 계속하시겠습니까?");
-        dialog.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                int result = DataRepository.deleteTodoNode(listID, todoID);
-                if(result == -1) {
-                    Toast.makeText(context,
-                            "목록 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                listUpdate(listID, todoID);
-                // 독립 리스트 처리
-                notifyDataSetChanged();
-            }
-        });
-        dialog.setNegativeButton("취소", null);
-        dialog.show();
-    }
-
-    private void listUpdate(int listID, int todoID) {
-        if (todoList.uid == -1) {
-            todoList.todos.remove(todoID);
-        }
-    }
 }
+

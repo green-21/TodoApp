@@ -11,142 +11,120 @@ import java.util.HashMap;
 public class DataRepository {
     static DBHelper dbHelper;
     public static SQLiteDatabase DB;
-    public static HashMap<Integer, TodoList> todoLists;
+    public static HashMap<Integer, TodoNode> todos;
 
     public static void initialize(Context context) {
         dbHelper = new DBHelper(context);
         DB = dbHelper.getWritableDatabase();
-        todoLists = new HashMap<>();
+        todos = new HashMap<>();
 
-        // table rebuild
-//        dbHelper.onUpgrade(DB,1,1);
+        //rebuild();
+        // todos 데이터 입력
 
-        // db 데이터를 받아와서 todoList에 대입
-        Cursor listCursor = DB.rawQuery("SELECT * FROM todo_list ORDER BY uid ASC", null);
-        while(listCursor.moveToNext()) {
-            TodoList tl = new TodoList(
-                    listCursor.getInt(0),
-                    listCursor.getString(1));
-            todoLists.put(tl.uid, tl);
-        }
-        listCursor.close();
-
-        // todoNode 대입
-        Cursor nodeCursor = DB.rawQuery("SELECT * FROM todo_node ORDER BY belong ASC", null);
-        while(nodeCursor.moveToNext()) {
-            //int uid, String name, boolean checked, boolean today, boolean importance, String date, String memo
-
-            TodoNode tn = new TodoNode(
-                    nodeCursor.getInt(0),
-                    nodeCursor.getString(1),
-                    nodeCursor.getInt(2),
-                    nodeCursor.getInt(3) != 0,
-                    nodeCursor.getInt(4) != 0,
-                    nodeCursor.getInt(5) != 0,
-                    nodeCursor.getString(6),
-                    nodeCursor.getString(7)
-            );
-            todoLists.get(tn.belong).todos.put(tn.uid,tn);
+        Cursor cursor = DB.rawQuery("SELECT * FROM todo_node;", null);
+        while(cursor.moveToNext()) {
+            TodoNode todo = new TodoNode(cursor);
+            todos.put(todo.uid, todo);
         }
     }
-
-    public static void close() {
-        DB.close();
+    public static void rebuild() {
+        dbHelper.onUpgrade(DB, 1,1);
     }
 
-    public static long insertTodoList(String name) {
-        ContentValues cv = new ContentValues();
-        cv.put("name", name);
-        long result = DB.insert("todo_list", null, cv);
+    public static ArrayList<TodoList> getTodoLists() {
+        ArrayList<TodoList> todoLists = new ArrayList<>();
+        Cursor cursor = DB.rawQuery("SELECT * FROM todo_list", null);
+        while (cursor.moveToNext()) {
+            TodoList tl = new TodoList(cursor);
+            todoLists.add(tl);
+        }
+        return todoLists;
+    }
+
+    public static boolean insertTodoList(ArrayList<TodoList> lists, TodoList todoList) {
+        int result = (int) DB.insert("todo_list", null, todoList.getContentValues());
         if (result != -1) {
-            TodoList tl = new TodoList((int)result, name);
-            todoLists.put(tl.uid, tl);
+            todoList.uid = result;
+            lists.add(todoList);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean updateTodoList(TodoList todoList) {
+        return DB.update("todo_list",
+                todoList.getContentValues(),
+                "uid="+todoList.uid, null) ==1;
+    }
+
+    public static boolean deleteTodoList(ArrayList<TodoList> lists, TodoList todoList) {
+        int i = DB.delete("todo_list","uid="+todoList.uid, null);
+        boolean result = i==1;
+        if(result) {
+            lists.remove(todoList);
         }
         return result;
-    }
-
-    public static int updateTodoList(int uid, String name) {
-        ContentValues cv = new ContentValues();
-        cv.put("name", name);
-        int result = DB.update("todo_list", cv, "uid=" + uid, null);
-        if (result > 0) {
-            getTodoList(uid).name = name;
-            return 0;
-        }
-        return -1;
-    }
-
-    public static int deleteTodoList(TodoList tl) {
-        for (int key : tl.todos.keySet()) {
-            tl.todos.remove(key);
-        }
-
-        int result = DB.delete("todo_list", "uid=" + tl.uid, null);
-        if (result > 0) {
-            todoLists.remove(tl);
-            return result;
-        }
-        return -1;
-    }
-
-    public static int getCountTodoList() {
-        return todoLists.size();
     }
 
     public static TodoList getTodoList(int uid) {
-        return todoLists.get(uid);
-    }
+        String where;
+        TodoList todoList = null;
 
-    public static long insertTodoNode(int parent, TodoNode tn) {
-        ContentValues cv = nodeToContentValues(tn);
-
-        long result = DB.insert("todo_node", null, cv);
-        if(result != -1)
-            tn.uid = (int)result;
-            getTodoList(parent).todos.put(tn.uid, tn);
-
-        return result;
-    }
-
-    public static int updateTodoNode(int parent, TodoNode tn) {
-        ContentValues cv = nodeToContentValues(tn);
-
-        int result = DB.update("todo_node", cv, "uid="+tn.uid, null);
-        if (result > 0) {
-            return 0;
+        Cursor listCursor = DB.rawQuery("SELECT * FROM todo_list WHERE uid="+uid, null);
+        while (listCursor.moveToNext()) {
+            todoList = new TodoList(listCursor);
         }
-        return -1;
-    }
 
-    public static int deleteTodoNode(int listID, int todoID) {
-        int result = DB.delete("todo_node", "uid="+todoID, null);
-        if (result > 0) {
-            TodoList tl = getTodoList(listID);
-            TodoNode node = getTodoNode(tl, todoID);
-            tl.todos.remove(node);
-            return 0;
+        for(TodoNode todo : todos.values()) {
+            switch(uid) {
+                case 1:
+                    if(todo.today)
+                        todoList.todos.add(todo);
+                    break;
+                case 2:
+                    if(todo.importance)
+                        todoList.todos.add(todo);
+                    break;
+                case 3:
+                    if(!todo.date.equals(""))
+                        todoList.todos.add(todo);
+                    break;
+                default:
+                    if(uid == todo.belong)
+                        todoList.todos.add(todo);
+                    break;
+            }
         }
-        return -1;
+        return todoList;
     }
 
-    public static TodoNode getTodoNode(int listId, int todoID) {
-        TodoList tl = getTodoList(listId);
-        return getTodoNode(tl, todoID);
-    }
-    public static TodoNode getTodoNode(TodoList todoList, int todoID) {
-        return todoList.todos.get(todoID);
+    public static TodoNode getTodo(int uid) {
+        return todos.get(uid);
     }
 
-    static ContentValues nodeToContentValues(TodoNode tn) {
-        ContentValues cv = new ContentValues();
-        cv.put("name", tn.name);
-        cv.put("belong", tn.belong);
-        cv.put("checked", tn.checked);
-        cv.put("today", tn.today);
-        cv.put("importance", tn.importance);
-        cv.put("date", tn.date);
-        cv.put("memo", tn.memo);
-        return cv;
+    public static boolean insertTodo(TodoList list, TodoNode todo) {
+        int result = (int) DB.insert("todo_node",null, todo.getContentValues());
+        if (result != -1) {
+            todo.uid = result;
+            list.insertTodo(todo);
+            todos.put(todo.uid, todo);
+            return true;
+        }
+        return false;
     }
 
+    public static boolean updateTodo(TodoNode todo) {
+
+        return DB.update("todo_node", todo.getContentValues(), "uid="+todo.uid, null) == 1;
+    }
+
+    public static boolean deleteTodo(TodoList list, TodoNode todo) {
+        int result = DB.delete("todo_node","uid="+todo.uid, null);
+        if (result == 1) {
+            list.deleteTodo(todo);
+            todos.remove(todo.uid);
+            return true;
+        }
+        return false;
+    }
 }
