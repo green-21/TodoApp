@@ -44,7 +44,7 @@ public class TodoListActivity extends AppCompatActivity {
         adapter = new TodoListAdapter(this, todoList);
         todos.setAdapter(adapter);
 
-        if (todoList.uid > 4)
+        if (!todoList.special)
             btnAdd.setVisibility(View.VISIBLE);
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,9 +58,9 @@ public class TodoListActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestart() {
+    protected void onStart() {
         adapter.notifyDataSetChanged();
-        super.onRestart();
+        super.onStart();
     }
 
     @Override
@@ -93,6 +93,9 @@ public class TodoListActivity extends AppCompatActivity {
             todo.date = t.date;
             todo.memo = t.memo;
             DataRepository.updateTodo(todo);
+            if (todoList.special) {
+                todoList.todos = DataRepository.getTodoList(todoList.uid).todos;
+            }
         }
         adapter.notifyDataSetChanged();
     }

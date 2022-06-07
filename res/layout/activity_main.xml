@@ -5,10 +5,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:orientation="vertical">
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/lView1"/>
 
     <GridView
         android:layout_width="match_parent"

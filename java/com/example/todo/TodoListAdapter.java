@@ -1,6 +1,5 @@
 package com.example.todo;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,10 +10,10 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.Toast;
+import android.widget.GridLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class TodoListAdapter extends BaseAdapter {
@@ -51,7 +50,14 @@ public class TodoListAdapter extends BaseAdapter {
             view = inflater.inflate(R.layout.list_todos, viewGroup, false);
         }
 
-        CheckBox cb = view.findViewById(android.R.id.text1);
+        CheckBox cb = view.findViewById(R.id.itemCheck);
+        TextView itemName = view.findViewById(R.id.itemName);
+        TextView itemToday = view.findViewById(R.id.itemToday);
+        TextView itemImpotance = view.findViewById(R.id.itemImportance);
+        TextView itemDate = view.findViewById(R.id.itemDate);
+        GridLayout item = (GridLayout) view.findViewById(R.id.itemLayout);
+        LinearLayout itemDetail = (LinearLayout) view.findViewById(R.id.itemDetail);
+
         cb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -59,11 +65,13 @@ public class TodoListAdapter extends BaseAdapter {
                     todo.checked = b;
                     DataRepository.updateTodo(todo);
                 }
-                if (b) cb.setPaintFlags(cb.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                else cb.setPaintFlags(cb.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+                setThroughLine(itemName, b);
+                setThroughLine(itemToday, b);
+                setThroughLine(itemImpotance,b);
+                setThroughLine(itemDate,b);
             }
         });
-        cb.setOnLongClickListener(new View.OnLongClickListener() {
+        item.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
                 DialogManager menu = new DialogManager(context);
@@ -82,18 +90,45 @@ public class TodoListAdapter extends BaseAdapter {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             DataRepository.deleteTodo(todoList, todo);
+                                            notifyDataSetChanged();
                                         }
                                     });
-                            notifyDataSetChanged();
+
                         }
                     }
                 });
                 return false;
             }
         });
-        cb.setText(todo.name);
+        itemName.setText(todo.name);
         cb.setChecked(todo.checked);
+        boolean isDetail = false;
+
+        isDetail |= visibleText(itemToday, todo.today);
+        isDetail |= visibleText(itemImpotance, todo.importance);
+
+        if(!todo.date.equals("")) {
+            itemDate.setText("\uD83D\uDDD3" + todo.date);
+            isDetail = true;
+        }
+        if(isDetail)
+            itemDetail.setVisibility(View.VISIBLE);
+        else
+            itemDetail.setVisibility(View.GONE);
+
         return view;
+    }
+
+    private void setThroughLine(TextView tv, boolean b) {
+        if (b) tv.setPaintFlags(tv.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+        else tv.setPaintFlags(tv.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+    }
+    private boolean visibleText(TextView tv, boolean b) {
+        if (b)
+            tv.setVisibility(View.VISIBLE);
+        else
+            tv.setVisibility(View.GONE);
+        return b;
     }
 }
 

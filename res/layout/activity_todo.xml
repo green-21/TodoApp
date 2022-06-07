@@ -9,7 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/etTodoTitle"
-        android:hint="제목"/>
+        android:hint="제목"
+        android:singleLine="true"/>
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

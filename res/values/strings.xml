@@ -4,4 +4,6 @@
     <string name="menu_title">기능 선택</string>
     <string name="list_delete_msg">목록에 포함된 모든 할 일이 모두 영구 삭제됩니다. 그래도 삭제하시겠습니까?</string>
     <string name="todo_delete_msg">할 일이 영구적으로 삭제됩니다. 그래도 삭제하시겠습니까?</string>
+    <string name="item_today">☀오늘 할 일</string>
+    <string name="item_importance">⭐중요!</string>
 </resources>

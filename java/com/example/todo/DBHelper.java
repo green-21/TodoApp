@@ -15,7 +15,8 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("PRAGMA foreign_keys=ON;");
-        db.execSQL("CREATE TABLE todo_list (uid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, special BOOLEAN);");
+        db.execSQL("CREATE TABLE todo_list (uid INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT, special BOOLEAN);");
         db.execSQL("CREATE TABLE todo_node (" +
                 "uid INTEGER PRIMARY KEY AUTOINCREMENT," +
                 " name TEXT," +

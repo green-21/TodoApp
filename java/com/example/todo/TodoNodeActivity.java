@@ -57,6 +57,7 @@ public class TodoNodeActivity extends Activity {
             today.setChecked(todo.today);
             importance.setChecked(todo.importance);
             dateView.setText("기간 설정  " + todo.date);
+            date = todo.date;
         }
 
         dateView.setOnClickListener(new View.OnClickListener() {

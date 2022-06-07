@@ -8,6 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/edtListName"
-        android:hint="목록 이름"/>
+        android:hint="목록 이름"
+        android:singleLine="true"/>
 
 </LinearLayout>
